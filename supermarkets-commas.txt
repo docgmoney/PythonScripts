@@ -1,0 +1,11 @@
+ID,Address,City,State,Country,name,employees
+001,145 Elm St,Edenbridge,ED,USA,Eden Tech,12
+002,77 Pine Ave,Springfield,SP,USA,Green Groceries,6
+003,620 Oak Dr,Madison,MD,USA,Madi Apparel,25
+004,332 Maple Blvd,Elmtown,ET,USA,Elm Electronics,10
+005,481 Cedar Ln,Willowbrooks,WB,USA,Willow Books,7
+006,212 Birch Pl,Fairfax,FX,USA,Fair Fabrics,30
+007,149 Spruce Sq,Briarwood,BW,USA,Briar Bistro,15
+008,390 Redwood Rd,Hickorytown,HT,USA,Hickory Hardware,5
+009,111 Cypress Ct,Oliveburg,OB,USA,Olive Optics,20
+010,758 Fir Fwy,Juniperville,JV,USA,Juniper Jewels,8

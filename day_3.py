@@ -1,0 +1,6 @@
+food = input("Give me a food type: ")
+plant = input("Give me your favorite plant: ")
+cooking = input("How will you cook this?: ")
+burned = input("A word to describe burnt: ")
+item = input("Random household item: ")
+print(cooking, food, "with", burned, plant, "on a bed of", item)

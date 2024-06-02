@@ -1,65 +1,65 @@
-import math
-import time
-import subprocess
 import os
+import sys
+import time
+import math
 import psutil
+from multiprocessing import Process, current_process
 
-# Function to compute the cube of a number and divide it by 2
 def cube_and_divide(x):
     return (x ** 3) / 2
 
-# Function to get the memory usage of the current process
-def get_memory_usage():
-    process = psutil.Process(os.getpid())
-    memory_info = process.memory_info()
-    return memory_info.rss  # Resident Set Size (physical memory usage)
+def get_memory_usage(pid):
+    process = psutil.Process(pid)
+    return process.memory_info().rss
 
-# Function to get the total memory usage of the current process and its child processes
-def get_total_memory_usage(child_pids):
-    total_memory = get_memory_usage()  # Start with the memory of the parent process
-    for pid in child_pids:
-        try:
-            child_process = psutil.Process(pid)
-            total_memory += child_process.memory_info().rss
-        except psutil.NoSuchProcess:
-            pass  # Ignore if the process no longer exists
+def get_total_memory_usage(pids):
+    total_memory = get_memory_usage(os.getpid())
+    for pid in pids:
+        if psutil.pid_exists(pid):
+            total_memory += get_memory_usage(pid)
     return total_memory
 
-# Main function to run the script
+def perform_computation(x, tolerance, iteration, pids):
+    while True:
+        iteration += 1
+        x = cube_and_divide(x)
+
+        # Print the value of x for debugging
+        print(f"Iteration: {iteration}, x: {x}")
+
+        # Spawn a new instance if x is close to 2
+        if abs(x - 2) < tolerance:
+            new_process = Process(target=perform_computation, args=(x, tolerance, 0, pids))
+            new_process.start()
+            pids.append(new_process.pid)
+            print(f"Spawned a new instance at iteration {iteration} with value {x}")
+
+        sqrt2 = math.sqrt(2)
+        cube_sqrt2_div_2 = (sqrt2 ** 3) / 2
+
+        # Check if x deviates from expected values
+        if not (abs(x - sqrt2) < tolerance or abs(x - cube_sqrt2_div_2) < tolerance or abs(x - 2) < tolerance):
+            print(f"Deviation detected at iteration {iteration} with value {x}")
+            break
+
+        # Report total memory usage
+        total_memory_usage = get_total_memory_usage(pids)
+        print(f"Total memory usage: {total_memory_usage / (1024 * 1024):.2f} MB")
+        time.sleep(1)
+
 def main():
     x = 2
-    expected_values = {math.sqrt(2), (math.sqrt(2) ** 3) / 2, 2}
     tolerance = 1e-9
-
     iteration = 0
-    script_name = os.path.basename(__file__)
-    child_pids = []
+    pids = []
 
     try:
-        while True:
-            iteration += 1
-            x = cube_and_divide(x)
-            
-            if abs(x - 2) < tolerance:
-                # Spawn a new instance of the script
-                child_process = subprocess.Popen(["python", __file__])
-                child_pids.append(child_process.pid)
-                print(f"Spawned a new instance at iteration {iteration} with value 2")
-
-            if not any(abs(x - ev) < tolerance for ev in expected_values):
-                print(f"Deviation detected at iteration {iteration} with value {x}")
-                break
-            
-            total_memory_usage = get_total_memory_usage(child_pids)
-            print(f"{script_name} - Total memory usage: {total_memory_usage / (1024 ** 2):.2f} MB")
-            time.sleep(1)
+        perform_computation(x, tolerance, iteration, pids)
     except KeyboardInterrupt:
-        # Clean up child processes on exit
-        for pid in child_pids:
-            try:
-                os.kill(pid, signal.SIGTERM)
-            except Exception as e:
-                print(f"Error terminating process {pid}: {e}")
+        print("Terminating all child processes...")
+        for pid in pids:
+            if psutil.pid_exists(pid):
+                psutil.Process(pid).terminate()
 
 if __name__ == "__main__":
     main()
